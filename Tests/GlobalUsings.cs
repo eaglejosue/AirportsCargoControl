@@ -1,0 +1,10 @@
+global using ApiAwbs.Data.Pagination;
+global using ApiAwbs.Data.ViewModels;
+global using FluentAssertions;
+global using Microsoft.AspNetCore.Mvc.Testing;
+global using Newtonsoft.Json.Linq;
+global using System.Net;
+global using System.Web;
+global using Tests.IntegrationTests.Base;
+global using Tests.Utils;
+global using Xunit;
