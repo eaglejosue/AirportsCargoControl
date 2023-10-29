@@ -1,5 +1,5 @@
-global using ApiAwbs.Data.Pagination;
-global using ApiAwbs.Data.ViewModels;
+global using Core.Data.Pagination;
+global using Core.Data.ViewModels;
 global using FluentAssertions;
 global using Microsoft.AspNetCore.Mvc.Testing;
 global using Newtonsoft.Json.Linq;
