@@ -1,4 +1,4 @@
-﻿namespace Core.Data.Models.Base;
+﻿namespace Core.Data.Entities.Base;
 
 public interface IDocument<TIdentification>
 {

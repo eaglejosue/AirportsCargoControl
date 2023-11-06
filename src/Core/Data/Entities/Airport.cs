@@ -1,4 +1,4 @@
-﻿namespace Core.Data.Models;
+﻿namespace Core.Data.Entities;
 
 [MongoCollection("AirportLocation")]
 public sealed class Airport : Document<Guid>

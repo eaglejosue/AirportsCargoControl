@@ -42,12 +42,12 @@ public class GlobalFiltersDto
 
     #region Methods
 
-    public void PerformanceFilter(ref List<Cargo> awbs)
+    public void PerformanceFilter(ref List<Cargo> cargos)
     {
         if (!string.IsNullOrEmpty(Performances))
         {
-            awbs = awbs.Where(item => PerformanceEnums.Contains(item.Performance)).ToList();
-            awbs.Capacity = awbs.Count();
+            cargos = cargos.Where(item => PerformanceEnums.Contains(item.Performance)).ToList();
+            cargos.Capacity = cargos.Count();
         }
     }
 

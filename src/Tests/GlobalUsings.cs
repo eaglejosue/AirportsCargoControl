@@ -1,5 +1,5 @@
 global using Core.Data.Pagination;
-global using Core.Data.ViewModels;
+global using Core.Data.Entities;
 global using FluentAssertions;
 global using Microsoft.AspNetCore.Mvc.Testing;
 global using Newtonsoft.Json.Linq;

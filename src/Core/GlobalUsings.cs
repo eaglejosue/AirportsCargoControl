@@ -2,8 +2,8 @@
 global using Core.Data.Dtos;
 global using Core.Data.Enums;
 global using Core.Data.Extensions;
-global using Core.Data.Models;
-global using Core.Data.Models.Base;
+global using Core.Data.Entities;
+global using Core.Data.Entities.Base;
 global using Core.Data.MongoUtils;
 global using Core.Data.Pagination;
 global using Core.Data.Repositories.Mongo;
@@ -40,3 +40,4 @@ global using System.Globalization;
 global using System.Linq.Expressions;
 global using System.Reflection;
 global using System.Text;
+global using Z.Dapper.Plus;

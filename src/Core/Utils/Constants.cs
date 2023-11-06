@@ -1,6 +1,6 @@
 ﻿namespace Core.Utils;
 
-public static class CargoStepsContants
+public static class CargoStepContants
 {
     public const string FirstMile = "First Mile";
     public const string LastMile = "Last Mile";
@@ -11,7 +11,8 @@ public static class CargoStepsContants
 public static class CacheConstants
 {
     public const int DefaultTTL = 5;//min
-    public const string CargoByAirportPagedQueryKey = "CargoByAirportPagedQuery";
+    public const string CargoQueryKey = "CargoQuery";
+    public const string CargoTotalsByAirportPagedQueryKey = "CargoTotalsByAirportPagedQuery";
 }
 
 public static class DataCacheContants

@@ -10,12 +10,6 @@ public static class DependenciesInjector
         //Add cache pipeline
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
 
-        //Add mediators
-        services.AddMediatR(new[]
-        {
-            typeof(CargoByAirportPagedQueryHandler).Assembly,
-        });
-
         //Add Mongo Repositories
         services.Configure<MongoDbSettings>(configuration.GetSection("MongoDbSettings"));
         services.AddSingleton<IMongoDbSettings>(sp => sp.GetRequiredService<IOptions<MongoDbSettings>>().Value);

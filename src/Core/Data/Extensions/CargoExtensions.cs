@@ -2,102 +2,51 @@
 
 public static class CargoExtensions
 {
-    public static Expression<Func<Cargo, bool>> GenerateFilterExpression(
-            this GlobalFiltersDto filtersDTO,
-            bool useOrForOriginDestinationAndLastOpsStation = false,
-            bool useForUnitTest = false)
+    public static void SetPerformance(ref List<Cargo> cargos)
     {
-        var filter = PredicateBuilder.New<Cargo>(true);
-
-        filtersDTO.RangeDateInitial = filtersDTO.RangeDateInitial.DateTimeUtc(true);
-        filtersDTO.RangeDateFinal = filtersDTO.RangeDateFinal.DateTimeUtc(false);
-        filter = filter.And(item => item.EstimatedDeliveryDate >= filtersDTO.RangeDateInitial && item.EstimatedDeliveryDate <= filtersDTO.RangeDateFinal);
-
-        if (filtersDTO.BrazilianRegionEnums.Count > 0)
-        {
-            var brazilianStates = Util.StatesByRegion(filtersDTO.BrazilianRegionEnums);
-            filtersDTO.BrazilianStates = filtersDTO.BrazilianStates.ConcatenateWithComma(string.Join(',', brazilianStates));
-        }
-
-        ClientFilter(filtersDTO, ref filter, useForUnitTest);
-
-        if (useForUnitTest)
-        {
-            if (filtersDTO.BrazilianStateEnums.Count > 0)
-                filter = filter.And(item => filtersDTO.BrazilianStateEnums.Contains(item.State));
-            if (filtersDTO.ActionsList.Count > 0)
-                filter = filter.And(item => filtersDTO.ActionsList.Contains(item.LastAction));
-            if (filtersDTO.OriginList.Count > 0)
-                filter = filter.And(item => filtersDTO.OriginList.Contains(item.Origin));
-            if (filtersDTO.DestinationList.Count > 0)
-                filter = filter.And(item => filtersDTO.DestinationList.Contains(item.Destination));
-            if (filtersDTO.ActualLocationList.Count > 0)
-                filter = filter.And(item => filtersDTO.ActualLocationList.Contains(item.LastOpsStation));
-        }
-        else
-        {
-            CreateFilterWithList(ref filter, filtersDTO.BrazilianStateEnums, item => item.State);
-            CreateFilterWithList(ref filter, filtersDTO.ActionsList, item => item.LastAction);
-
-            //Regra para filtrar AWBs com Origem OU Destino OU Localização Atual
-            if (useOrForOriginDestinationAndLastOpsStation)
-            {
-                var originsFilter = Builders<Cargo>.Filter.In(item => item.Origin, filtersDTO.OriginList);
-                var destinationsFilter = Builders<Cargo>.Filter.In(item => item.Destination, filtersDTO.DestinationList);
-                var lastOpsStationsFilter = Builders<Cargo>.Filter.In(item => item.LastOpsStation, filtersDTO.ActualLocationList);
-
-                filter = filter.And(item => originsFilter.Inject() || destinationsFilter.Inject() || lastOpsStationsFilter.Inject());
-            }
-
-            CreateFilterWithList(ref filter, filtersDTO.OriginList, item => item.Origin);
-            CreateFilterWithList(ref filter, filtersDTO.DestinationList, item => item.Destination);
-            CreateFilterWithList(ref filter, filtersDTO.ActualLocationList, item => item.LastOpsStation);
-        }
-
-        return filter;
+        foreach (var c in cargos)
+            c.Performance = c.GetPerformance();
     }
 
-    private static void ClientFilter(this GlobalFiltersDto filtersDTO, ref ExpressionStarter<Cargo> filter, bool useForUnitTest = false)
+    public static PerformanceEnum GetPerformance(this Cargo c)
     {
-        var client = filtersDTO.ClientList.Select(s => s.RemoveCharacters(new char[3] { '.', '/', '-' }));
-        var clientNames = client.Where(w => char.IsLetter(w[0])).ToList();
-        var clientCodes = client.Where(w => char.IsDigit(w[0])).ToList();
+        if (c.StepFirstMile() && c.EstimatedDeliveryDate.Date == DateTime.Today)
+            return PerformanceEnum.AtRisk;
 
-        if (useForUnitTest)
+        if (c.DeliveryDateTime.HasValue)//c Entregue
         {
-            if (clientNames.Count > 0 && clientCodes.Count > 0)
+            if (c.DeliveryDateTime?.Date > c.EstimatedDeliveryDate.Date)
             {
-                filter = filter.And(item => clientNames.Contains(item.ServiceTakerName) || clientCodes.Contains(item.ServiceTakerCode));
-                return;
+                if (c.OccurrenceDate.HasValue && c.OccurrenceDate?.Date <= c.EstimatedDeliveryDate.Date)
+                    return PerformanceEnum.Normal;//Ocorrencia
+
+                return PerformanceEnum.Late;
             }
 
-            if (clientNames.Count > 0)
-                filter = filter.And(item => clientNames.Contains(item.ServiceTakerName));
-
-            if (clientCodes.Count > 0)
-                filter = filter.And(item => clientCodes.Contains(item.ServiceTakerCode));
+            return PerformanceEnum.Normal;
         }
-        else
+        else//Não Entregue
         {
-            if (clientNames.Count > 0 && clientCodes.Count > 0)
+            if (DateTime.Today > c.EstimatedDeliveryDate.Date)
             {
-                var filterCustomerNames = Builders<Cargo>.Filter.In(item => item.ServiceTakerName, clientNames);
-                var filterCustomerCodes = Builders<Cargo>.Filter.In(item => item.ServiceTakerCode, clientCodes);
-                filter = filter.And(item => filterCustomerNames.Inject() || filterCustomerCodes.Inject());
-                return;
+                if (c.OccurrenceDate.HasValue && c.OccurrenceDate?.Date <= c.EstimatedDeliveryDate.Date)
+                    return PerformanceEnum.Normal;//Ocorrencia
+
+                return PerformanceEnum.Late;
             }
-
-            CreateFilterWithList(ref filter, clientNames, item => item.ServiceTakerName);
-            CreateFilterWithList(ref filter, clientCodes, item => item.ServiceTakerCode);
         }
+
+        return PerformanceEnum.Normal;
     }
 
-    private static void CreateFilterWithList<T>(ref ExpressionStarter<Cargo> filter, IEnumerable<T> values, Expression<Func<Cargo, T>> field)
-    {
-        if (values?.Count() == 0)
-            return;
+    #region Steps
+    public static bool StepFirstMile(this Cargo c) => c.Step == CargoStepContants.FirstMile;
+    public static bool StepMiddleMile(this Cargo c) => c.Step == CargoStepContants.MiddleMile;
+    public static bool StepLastMile(this Cargo c) => c.Step == CargoStepContants.LastMile;
+    public static bool StepDelivered(this Cargo c) => c.Step == CargoStepContants.Delivered;
+    #endregion
 
-        var filterBuilder = Builders<Cargo>.Filter.In(field, values);
-        filter = filter.And(item => filterBuilder.Inject());
-    }
+    #region Views
+    public static bool ViewFloor(this Cargo c) => c.LastAction == "Departed";
+    #endregion
 }

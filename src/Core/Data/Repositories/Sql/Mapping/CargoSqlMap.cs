@@ -6,14 +6,14 @@ public sealed class CargoSqlMap : DommelEntityMap<Cargo>
     {
         ToTable(nameof(Cargo));
         Map(m => m.Id).IsKey().SetGeneratedOption(DatabaseGeneratedOption.None);
-        Map(m => m.AirWaybill);
+        Map(m => m.Code);
         Map(m => m.EstimatedDeliveryDate);
         Map(m => m.CreatedOn);
-        Map(m => m.LastUpdatedOn);
-        Map(m => m.LastOpsStation);
+        Map(m => m.UpdatedOn);
+        Map(m => m.AirportIsOn);
         Map(m => m.LastAction);
         Map(m => m.Origin);
         Map(m => m.Destination);
-        Map(m => m.ActualStep);
+        Map(m => m.Step);
     }
 }

@@ -1,7 +1,7 @@
 ﻿global using Api.Endpoints;
 global using Core.Cache;
 global using Core.Data.Dtos;
-global using Core.Data.Models;
+global using Core.Data.Entities;
 global using Core.Data.MongoUtils;
 global using Core.Data.Repositories.Mongo;
 global using Core.Data.Repositories.Sql;

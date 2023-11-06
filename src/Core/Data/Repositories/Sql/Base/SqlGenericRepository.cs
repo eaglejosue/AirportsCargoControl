@@ -10,8 +10,8 @@ public interface ISqlGenericRepository<T> where T : class
     Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
     Task InsertListAsync(List<T> list);
     Task<bool> UpdateListAsync(List<T> list);
-    Task BulkInsertAsync(List<T> items, int pageSize = 100);
-    Task BulkUpdateAsync(List<T> items, int pageSize = 100);
+    Task BulkInsertAsync(List<T> items, int pageSize = 1000);
+    Task BulkUpdateAsync(List<T> items, int pageSize = 1000);
 }
 
 public abstract class SqlGenericRepository<T> : ISqlGenericRepository<T> where T : class
@@ -25,7 +25,12 @@ public abstract class SqlGenericRepository<T> : ISqlGenericRepository<T> where T
 
     public Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate) => _sqlSession.Connection.FirstOrDefaultAsync(predicate);
 
-    public async Task<List<T>> SelectAsync(Expression<Func<T, bool>> predicate) => (await _sqlSession.Connection.SelectAsync(predicate)).ToList();
+    public async Task<List<T>> SelectAsync(Expression<Func<T, bool>> predicate)
+    {
+        var result = (await _sqlSession.Connection.SelectAsync(predicate)).ToList();
+        result.Capacity = result.Count;
+        return result;
+    }
 
     public Task InsertAsync(T entity) => _sqlSession.Connection.InsertAsync(entity);
 
@@ -39,7 +44,7 @@ public abstract class SqlGenericRepository<T> : ISqlGenericRepository<T> where T
 
     public Task<bool> UpdateListAsync(List<T> list) => _sqlSession.Connection.UpdateAsync(list);
 
-    public async Task BulkInsertAsync(List<T> list, int pageSize = 10)
+    public Task BulkInsertAsync(List<T> list, int pageSize = 1000)
     {
         var page = 0;
         var listInsert = list.Skip(page * pageSize).Take(pageSize).ToList();
@@ -48,7 +53,7 @@ public abstract class SqlGenericRepository<T> : ISqlGenericRepository<T> where T
         {
             try
             {
-                await _sqlSession.Connection.InsertAllAsync(listInsert);
+                _sqlSession.Connection.BulkInsert(listInsert);
             }
             catch (Exception ex)
             {
@@ -58,9 +63,11 @@ public abstract class SqlGenericRepository<T> : ISqlGenericRepository<T> where T
             page++;
             listInsert = list.Skip(page * pageSize).Take(pageSize).ToList();
         };
+
+        return Task.CompletedTask;
     }
 
-    public async Task BulkUpdateAsync(List<T> items, int pageSize = 10)
+    public Task BulkUpdateAsync(List<T> items, int pageSize = 1000)
     {
         var page = 0;
         var listUpdate = items.Skip(page * pageSize).Take(pageSize).ToList();
@@ -69,7 +76,7 @@ public abstract class SqlGenericRepository<T> : ISqlGenericRepository<T> where T
         {
             try
             {
-                await _sqlSession.Connection.UpdateAsync(listUpdate);
+                _sqlSession.Connection.BulkUpdate(listUpdate);
             }
             catch (Exception ex)
             {
@@ -79,5 +86,7 @@ public abstract class SqlGenericRepository<T> : ISqlGenericRepository<T> where T
             page++;
             listUpdate = items.Skip(page * pageSize).Take(pageSize).ToList();
         };
+
+        return Task.CompletedTask;
     }
 }

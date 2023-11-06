@@ -4,18 +4,13 @@ public static class CargoEndpoints
 {
     public static void ConfigureCargoEndpoints(this WebApplication app)
     {
-        app.MapGet("api/cargo",
+        app.MapGet("api/cargo/totals-by-airport",
         async (
-            string CodeAirport,
-            bool? UseSql,
-            PaginationFilterDto requestPagination,
-            GlobalFiltersDto requestGlobalFilters,
-            [FromServices] IMediator mediatorService,
+            [FromQuery] CargoTotalsByAirportPagedQuery query,
+            [FromServices] IMediator mediator,
             CancellationToken cancellationToken) =>
         {
-            var filter = new CargoByAirportPagedQuery(requestGlobalFilters, requestPagination, CodeAirport, UseSql ?? false);
-
-            var paginationResult = await mediatorService.Send(filter, cancellationToken).ConfigureAwait(false);
+            var paginationResult = await mediator.Send(query, cancellationToken).ConfigureAwait(false);
             
             if (!paginationResult?.Results?.Any() ?? false)
                 return Results.NoContent();

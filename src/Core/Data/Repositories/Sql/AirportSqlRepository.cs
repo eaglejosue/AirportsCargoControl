@@ -1,17 +1,15 @@
-﻿namespace Core.Data.Repositories.Mongo;
+﻿namespace Core.Data.Repositories.Sql;
 
-public interface IAirportMongoRepository : IMongoGenericRepository<Airport, Guid>
+public interface IAirportSqlRepository : ISqlGenericRepository<Airport>
 {
     Task<List<Airport>> GetAllItemsCachedAsync();
 }
 
-public sealed class AirportMongoRepository : MongoGenericRepository<Airport, Guid>, IAirportMongoRepository
+public sealed class AirportSqlRepository : SqlGenericRepository<Airport>, IAirportSqlRepository
 {
     private readonly ICache _cache;
 
-    public AirportMongoRepository(
-        IMongoDbSettings settings,
-        ICache cache) : base(settings)
+    public AirportSqlRepository(SqlSession sqlSession, ICache cache) : base(sqlSession)
     {
         _cache = cache;
     }
@@ -22,7 +20,7 @@ public sealed class AirportMongoRepository : MongoGenericRepository<Airport, Gui
         {
             return Task.Run(async () =>
             {
-                return await _collection.Find(Builders<Airport>.Filter.Empty).ToListAsync();
+                return await SelectAsync(PredicateBuilder.New<Airport>());
             })
             .GetAwaiter()
             .GetResult();
