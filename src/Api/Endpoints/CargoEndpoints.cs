@@ -31,6 +31,7 @@ public static class CargoEndpoints
                 .And(item => item.EstimatedDeliveryDate <= RangeDateFinal);
 
             var cargos = await cargoMongoRepository.FilterByAsync(filter);
+            
             await cargoSqlRepository.BulkInsertAsync(cargos);
 
             return Results.Ok($"{cargos.Count} items inserted on sql.");
